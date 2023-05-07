@@ -7,7 +7,10 @@ import { useUser } from "@clerk/nextjs";
 import { SignInButton, SignOutButton } from "@clerk/clerk-react";
 
 const Home: NextPage = () => {
-  const hello = api.example.hello.useQuery({ text: "from tRPC" });
+
+  const res = api.example.getAll.useQuery();
+
+  console.log(res);
 
   const user = useUser();
 
@@ -27,7 +30,7 @@ const Home: NextPage = () => {
           {!user.isSignedIn && <SignInButton />}
           {!!user.isSignedIn && <SignOutButton />}         
           <p className="text-2xl text-white">
-            {hello.data ? hello.data.greeting : "Loading tRPC query..."}
+            {/* {res.data ? res.data.title : "Loading tRPC query..."} */}
           </p>
         </div>
       </main>
