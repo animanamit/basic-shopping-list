@@ -2,19 +2,48 @@ import { type NextPage } from "next";
 import Head from "next/head";
 import Link from "next/link";
 
-import { api } from "@/utils/api";
+import { type RouterOutputs, api } from "@/utils/api";
 import { useUser } from "@clerk/nextjs";
 import { SignInButton, SignOutButton } from "@clerk/clerk-react";
 
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+dayjs.extend(relativeTime);
+
+const AddItemWizard = () => {
+  const { user } = useUser();
+
+  if (!user) {
+    return null;
+  }
+
+  return <div className="flex flex-col bg-gray-400 rounded-sm p-2 space-y-1">
+    <h1>Add an item!</h1>
+      <input type="text" placeholder="Title"/>
+      <input type="text" placeholder="Link"/>
+  </div>
+}
+
+type ListItemWithUser = RouterOutputs["items"]["getAll"][number];
+
+const ListContainer = (props: ListItemWithUser) => {
+  const { item, author } = props;
+
+  return <div key={item.id} className="flex flex-row space-y-2 p-4 bg-red-300 rounded-lg">
+          <Link href={item.link}>
+            {item.title}
+          </Link>
+          <span>{`${dayjs(item.createdAt).fromNow()}`}</span>
+        </div>
+};
+
 const Home: NextPage = () => {
 
-  const res = api.example.getAll.useQuery();
+  const { data } = api.items.getAll.useQuery();
 
-  console.log(res);
+  console.log(data);
 
-  const user = useUser();
-
-  console.log(user);
+  const { isLoaded, isSignedIn, user } = useUser();
 
   return (
     <>
@@ -26,12 +55,16 @@ const Home: NextPage = () => {
       <main className="flex min-h-screen flex-col items-center justify-center">
         <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
           <h1>HI</h1>
-
-          {!user.isSignedIn && <SignInButton />}
-          {!!user.isSignedIn && <SignOutButton />}         
-          <p className="text-2xl text-white">
-            {/* {res.data ? res.data.title : "Loading tRPC query..."} */}
-          </p>
+          {isSignedIn && <AddItemWizard />}
+          {!isSignedIn && <SignInButton />}
+          {!!isSignedIn && <SignOutButton />}
+          <div className="text-2xl text-black">
+            {data?.map((slice) => {
+              return (
+                <ListContainer key={slice.item.id} {...slice} />
+              )
+            })}
+          </div>
         </div>
       </main>
     </>
